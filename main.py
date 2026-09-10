@@ -795,19 +795,73 @@ def schedule_service_restart(delay_seconds=1.5):
 
         # 2. Windows / Direct process re-execution
         try:
+            # Self-healing for Windows virtual environments if python path changed
+            venv_cfg = os.path.join(BASE_DIR, ".venv", "pyvenv.cfg")
+            if os.path.isfile(venv_cfg):
+                try:
+                    with open(venv_cfg, "r", encoding="utf-8") as f:
+                        cfg_lines = f.readlines()
+                    cfg_changed = False
+                    new_lines = []
+                    for line in cfg_lines:
+                        if line.strip().startswith("home ="):
+                            home_dir = line.split("=", 1)[1].strip()
+                            if not os.path.isdir(home_dir):
+                                real_py = shutil.which("python")
+                                if real_py:
+                                    new_home = os.path.dirname(real_py)
+                                    line = f"home = {new_home}\n"
+                                    cfg_changed = True
+                        new_lines.append(line)
+                    if cfg_changed:
+                        with open(venv_cfg, "w", encoding="utf-8") as f:
+                            f.writelines(new_lines)
+                        print("[*] Automatically healed .venv pyvenv.cfg home path.")
+                except Exception as cfg_err:
+                    print(f"[!] Warning reading/healing pyvenv.cfg: {cfg_err}")
+
+            # Identify a working python executable
+            py_bin = sys.executable
+            try:
+                test_py = subprocess.run([py_bin, "-c", "import sys"], capture_output=True, timeout=5)
+                if test_py.returncode != 0:
+                    py_bin = None
+            except Exception:
+                py_bin = None
+
+            if not py_bin:
+                candidates = [
+                    os.path.join(BASE_DIR, ".venv", "Scripts", "python.exe"),
+                    os.path.join(BASE_DIR, ".venv", "bin", "python"),
+                    shutil.which("python"),
+                    shutil.which("python3")
+                ]
+                for c in candidates:
+                    if c and os.path.isfile(c):
+                        try:
+                            test_c = subprocess.run([c, "-c", "import sys"], capture_output=True, timeout=5)
+                            if test_c.returncode == 0:
+                                py_bin = c
+                                break
+                        except Exception:
+                            continue
+
+            if not py_bin:
+                py_bin = "python"
+
             main_script = os.path.join(BASE_DIR, "main.py")
             if os.name == "nt":
                 DETACHED_PROCESS = 0x00000008
                 CREATE_NEW_PROCESS_GROUP = 0x00000200
                 subprocess.Popen(
-                    [sys.executable, main_script],
+                    [py_bin, main_script],
                     creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
                     close_fds=True,
                     cwd=BASE_DIR
                 )
             else:
                 subprocess.Popen(
-                    [sys.executable, main_script],
+                    [py_bin, main_script],
                     close_fds=True,
                     cwd=BASE_DIR
                 )

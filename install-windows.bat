@@ -28,6 +28,14 @@ echo [OK] Python detected successfully.
 :: 2. Create Virtual Environment
 echo.
 echo Setting up Python Virtual Environment (.venv)...
+if exist ".venv" (
+    call .venv\Scripts\python.exe -c "import sys" >nul 2>&1
+    if errorlevel 1 (
+        echo [WARNING] Existing virtual environment is invalid or points to an outdated Python installation.
+        echo Recreating .venv...
+        rmdir /s /q .venv
+    )
+)
 if not exist ".venv" (
     python -m venv .venv
     if errorlevel 1 (
@@ -37,7 +45,7 @@ if not exist ".venv" (
     )
     echo [OK] Virtual environment created successfully at .venv\
 ) else (
-    echo [INFO] Virtual environment .venv already exists.
+    echo [INFO] Virtual environment .venv is valid and ready.
 )
 
 :: 3. Install Requirements
