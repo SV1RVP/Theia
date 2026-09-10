@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.2"
+VERSION = "2.3.3"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -187,23 +187,60 @@ def init_storage():
     """Initialize SQLite storage and the CSV log file inside config/ directory."""
     os.makedirs(CONFIG_DIR, exist_ok=True)
 
-    # Migrate legacy database from root directory if it exists and config db does not
+    # 1. Migrate or merge legacy database from root directory
     legacy_db = os.path.join(BASE_DIR, "radiation_data.db")
-    if os.path.exists(legacy_db) and not os.path.exists(DB_NAME):
+    if os.path.exists(legacy_db):
         try:
-            shutil.move(legacy_db, DB_NAME)
-            print(f"[+] Migrated database from {legacy_db} to {DB_NAME}")
+            if not os.path.exists(DB_NAME):
+                shutil.move(legacy_db, DB_NAME)
+                print(f"[+] Migrated legacy database from {legacy_db} to {DB_NAME}")
+            else:
+                # Merge unique records from legacy database into DB_NAME
+                print(f"[*] Merging legacy database records from {legacy_db} into {DB_NAME}...")
+                with closing(sqlite3.connect(DB_NAME)) as conn:
+                    conn.execute("ATTACH DATABASE ? AS legacy", (legacy_db,))
+                    tables = [r[0] for r in conn.execute("SELECT name FROM legacy.sqlite_master WHERE type='table'").fetchall()]
+                    if "measurements" in tables:
+                        conn.execute("""
+                            INSERT OR IGNORE INTO measurements (
+                                timestamp, recorded_at_unix, cpm, acpm, usvh, total_dose, uploaded_to_gmcmap
+                            )
+                            SELECT
+                                timestamp,
+                                CAST(strftime('%s', replace(timestamp, ' ', 'T')) AS INTEGER),
+                                cpm, acpm, usvh, total_dose,
+                                uploaded_to_gmcmap
+                            FROM legacy.measurements
+                            WHERE timestamp NOT IN (SELECT timestamp FROM measurements)
+                        """)
+                        conn.commit()
+                    conn.execute("DETACH DATABASE legacy")
+                bak_path = legacy_db + ".migrated.bak"
+                if not os.path.exists(bak_path):
+                    shutil.move(legacy_db, bak_path)
+                print(f"[+] Successfully merged legacy database measurements into {DB_NAME}")
         except Exception as exc:
-            print(f"[!] Warning migrating database: {exc}")
+            print(f"[!] Warning processing legacy database: {exc}")
 
-    # Migrate legacy csv log from root directory if it exists and config csv does not
+    # 2. Migrate or merge legacy CSV log from root directory
     legacy_csv = os.path.join(BASE_DIR, "radiation_log.csv")
-    if os.path.exists(legacy_csv) and not os.path.exists(CSV_NAME):
+    if os.path.exists(legacy_csv):
         try:
-            shutil.move(legacy_csv, CSV_NAME)
-            print(f"[+] Migrated CSV log from {legacy_csv} to {CSV_NAME}")
+            if not os.path.exists(CSV_NAME):
+                shutil.move(legacy_csv, CSV_NAME)
+                print(f"[+] Migrated legacy CSV log from {legacy_csv} to {CSV_NAME}")
+            else:
+                with open(legacy_csv, "r", encoding="utf-8", errors="ignore") as f_in, \
+                     open(CSV_NAME, "a", encoding="utf-8") as f_out:
+                    lines = f_in.readlines()
+                    data_lines = [line for line in lines if not line.lower().startswith("timestamp")]
+                    f_out.writelines(data_lines)
+                bak_csv = legacy_csv + ".migrated.bak"
+                if not os.path.exists(bak_csv):
+                    shutil.move(legacy_csv, bak_csv)
+                print(f"[+] Appended legacy CSV measurements into {CSV_NAME}")
         except Exception as exc:
-            print(f"[!] Warning migrating CSV log: {exc}")
+            print(f"[!] Warning processing legacy CSV log: {exc}")
 
     with closing(get_db_connection()) as conn:
         cursor = conn.cursor()
@@ -227,13 +264,15 @@ def init_storage():
         }
         if "recorded_at_unix" not in columns:
             cursor.execute("ALTER TABLE measurements ADD COLUMN recorded_at_unix INTEGER")
-            cursor.execute(
-                """
-                UPDATE measurements
-                SET recorded_at_unix = CAST(strftime('%s', replace(timestamp, ' ', 'T')) AS INTEGER)
-                WHERE recorded_at_unix IS NULL AND timestamp IS NOT NULL
-                """
-            )
+
+        # Guarantee all records have valid recorded_at_unix
+        cursor.execute(
+            """
+            UPDATE measurements
+            SET recorded_at_unix = CAST(strftime('%s', replace(timestamp, ' ', 'T')) AS INTEGER)
+            WHERE (recorded_at_unix IS NULL OR recorded_at_unix = 0) AND timestamp IS NOT NULL
+            """
+        )
 
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_measurements_recorded_at_unix ON measurements(recorded_at_unix)"
@@ -259,7 +298,7 @@ def clear_old_measurements():
 
     cutoff_unix = int((datetime.now() - timedelta(days=RETENTION_DAYS)).timestamp())
     with closing(get_db_connection()) as conn:
-        conn.execute("DELETE FROM measurements WHERE recorded_at_unix < ?", (cutoff_unix,))
+        conn.execute("DELETE FROM measurements WHERE recorded_at_unix > 0 AND recorded_at_unix < ?", (cutoff_unix,))
         conn.commit()
 
 
@@ -616,31 +655,42 @@ def api_data():
             today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
             today_start_unix = int(today_start.timestamp())
             today_end = today_start + timedelta(days=1) - timedelta(microseconds=1)
-            today_end_unix = int(today_end.timestamp())
 
-            # Fetch measurements: include at least rolling 24h as well so short timeframes (1H, 6H, 12H)
-            # have full context across midnight, while ensuring the calendar day (00:00 - 23:59) is fully covered.
+            # Query rolling 24 hours of measurements so all views (1H, 6H, 12H, 24H) have full data
             rolling_24h_unix = int((now - timedelta(hours=24)).timestamp())
-            query_start_unix = min(today_start_unix, rolling_24h_unix)
+            rolling_24h_str = (now - timedelta(hours=24)).strftime("%Y-%m-%d %H:%M:%S")
 
             cursor.execute(
                 """
                 SELECT timestamp, recorded_at_unix, cpm, usvh
                 FROM measurements
-                WHERE recorded_at_unix >= ? AND recorded_at_unix <= ?
-                ORDER BY recorded_at_unix ASC, id ASC
+                WHERE (recorded_at_unix >= ? OR (recorded_at_unix IS NULL AND timestamp >= ?))
+                ORDER BY COALESCE(recorded_at_unix, 0) ASC, timestamp ASC, id ASC
                 """,
-                (query_start_unix, today_end_unix),
+                (rolling_24h_unix, rolling_24h_str),
             )
             history_rows = cursor.fetchall()
 
-        # Calculate today's 24h accumulated dose strictly from 00:00:00 to 23:59:59
+        # Calculate 24h accumulated dose over the rolling 24h history
+        dose_24h = 0.0
+        for i in range(1, len(history_rows)):
+            t_prev = history_rows[i - 1]["recorded_at_unix"]
+            t_curr = history_rows[i]["recorded_at_unix"]
+            if t_prev is not None and t_curr is not None:
+                dt_hours = (t_curr - t_prev) / 3600.0
+                if 0 < dt_hours <= 2.0:
+                    avg_rate = (history_rows[i - 1]["usvh"] + history_rows[i]["usvh"]) / 2.0
+                    dose_24h += avg_rate * dt_hours
+        if len(history_rows) == 1 and history_rows[0]["usvh"] is not None:
+            dose_24h = history_rows[0]["usvh"] / 60.0
+
+        # Also calculate today's calendar-day accumulated dose strictly from 00:00:00 to now
         today_rows = [
             r for r in history_rows
-            if r["recorded_at_unix"] is not None and r["recorded_at_unix"] >= today_start_unix
+            if (r["recorded_at_unix"] is not None and r["recorded_at_unix"] >= today_start_unix)
+            or (r["recorded_at_unix"] is None and r["timestamp"] >= today_start.strftime("%Y-%m-%d 00:00:00"))
         ]
-
-        dose_24h = 0.0
+        dose_today = 0.0
         for i in range(1, len(today_rows)):
             t_prev = today_rows[i - 1]["recorded_at_unix"]
             t_curr = today_rows[i]["recorded_at_unix"]
@@ -648,9 +698,9 @@ def api_data():
                 dt_hours = (t_curr - t_prev) / 3600.0
                 if 0 < dt_hours <= 2.0:
                     avg_rate = (today_rows[i - 1]["usvh"] + today_rows[i]["usvh"]) / 2.0
-                    dose_24h += avg_rate * dt_hours
+                    dose_today += avg_rate * dt_hours
         if len(today_rows) == 1 and today_rows[0]["usvh"] is not None:
-            dose_24h = today_rows[0]["usvh"] / 60.0
+            dose_today = today_rows[0]["usvh"] / 60.0
 
         history = [
             {
@@ -666,6 +716,7 @@ def api_data():
             "status": "success",
             "latest": latest,
             "dose_24h": round(dose_24h, 4),
+            "dose_today": round(dose_today, 4),
             "today_start": today_start.strftime("%Y-%m-%d 00:00:00"),
             "today_end": today_end.strftime("%Y-%m-%d 23:59:59"),
             "history": history,
@@ -851,14 +902,20 @@ def schedule_service_restart(delay_seconds=1.5):
 
             main_script = os.path.join(BASE_DIR, "main.py")
             if os.name == "nt":
-                DETACHED_PROCESS = 0x00000008
-                CREATE_NEW_PROCESS_GROUP = 0x00000200
-                subprocess.Popen(
-                    [py_bin, main_script],
-                    creationflags=DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP,
-                    close_fds=True,
-                    cwd=BASE_DIR
-                )
+                CREATE_NEW_CONSOLE = 0x00000010
+                bat_script = os.path.join(BASE_DIR, "start-windows.bat")
+                if os.path.exists(bat_script):
+                    subprocess.Popen(
+                        ["cmd.exe", "/c", bat_script],
+                        creationflags=CREATE_NEW_CONSOLE,
+                        cwd=BASE_DIR
+                    )
+                else:
+                    subprocess.Popen(
+                        [py_bin, main_script],
+                        creationflags=CREATE_NEW_CONSOLE,
+                        cwd=BASE_DIR
+                    )
             else:
                 subprocess.Popen(
                     [py_bin, main_script],
@@ -891,6 +948,94 @@ def api_perform_update():
             "status": "error",
             "message": str(exc)
         }), 500
+
+
+@app.route("/api/system/db-info", methods=["GET"])
+def api_system_db_info():
+    try:
+        total_rows = 0
+        min_ts = None
+        max_ts = None
+        db_exists = os.path.exists(DB_NAME)
+        db_size = os.path.getsize(DB_NAME) if db_exists else 0
+
+        if db_exists:
+            with closing(get_db_connection()) as conn:
+                row = conn.execute("SELECT COUNT(*), MIN(timestamp), MAX(timestamp) FROM measurements").fetchone()
+                if row:
+                    total_rows, min_ts, max_ts = row[0], row[1], row[2]
+
+        legacy_db = os.path.join(BASE_DIR, "radiation_data.db")
+        legacy_exists = os.path.exists(legacy_db)
+        legacy_count = 0
+        if legacy_exists:
+            try:
+                with closing(sqlite3.connect(legacy_db)) as lconn:
+                    legacy_count = lconn.execute("SELECT COUNT(*) FROM measurements").fetchone()[0]
+            except Exception:
+                pass
+
+        return jsonify({
+            "status": "success",
+            "db_path": DB_NAME,
+            "db_exists": db_exists,
+            "db_size_bytes": db_size,
+            "total_records": total_rows,
+            "oldest_timestamp": min_ts,
+            "newest_timestamp": max_ts,
+            "legacy_db_path": legacy_db,
+            "legacy_db_exists": legacy_exists,
+            "legacy_records": legacy_count
+        })
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
+
+
+@app.route("/api/system/import-measurements", methods=["POST"])
+def api_system_import_measurements():
+    try:
+        payload = request.get_json(silent=True)
+        if not payload or not isinstance(payload.get("measurements"), list):
+            return jsonify({"status": "error", "message": "Expected JSON with 'measurements' list"}), 400
+
+        measurements = payload["measurements"]
+        imported = 0
+        with closing(get_db_connection()) as conn:
+            cursor = conn.cursor()
+            for m in measurements:
+                ts = m.get("timestamp")
+                if not ts:
+                    continue
+                cpm = int(m.get("cpm", 0))
+                acpm = float(m.get("acpm", 0.0)) if m.get("acpm") is not None else None
+                usvh = float(m.get("usvh", 0.0))
+                total_dose = float(m.get("total_dose", 0.0)) if m.get("total_dose") is not None else None
+                rec_unix = m.get("recorded_at_unix")
+                if not rec_unix:
+                    try:
+                        rec_unix = int(datetime.strptime(ts, "%Y-%m-%d %H:%M:%S").timestamp())
+                    except Exception:
+                        rec_unix = 0
+
+                cursor.execute(
+                    """
+                    INSERT OR IGNORE INTO measurements (
+                        timestamp, recorded_at_unix, cpm, acpm, usvh, total_dose, uploaded_to_gmcmap
+                    ) VALUES (?, ?, ?, ?, ?, ?, 1)
+                    """,
+                    (ts, rec_unix, cpm, acpm, usvh, total_dose)
+                )
+                if cursor.rowcount > 0:
+                    imported += 1
+            conn.commit()
+
+        return jsonify({
+            "status": "success",
+            "imported_count": imported,
+            "total_submitted": len(measurements)
+        })
+    except Exception as exc:
+        return jsonify({"status": "error", "message": str(exc)}), 500
 
 
 init_storage()

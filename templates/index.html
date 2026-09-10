@@ -1921,7 +1921,7 @@
                 <div class="version-info-box">
                     <div class="version-row">
                         <span id="lbl-curr-ver">Τρέχουσα Έκδοση:</span>
-                        <span class="version-pill current" id="curr-version-val">v2.3.2</span>
+                        <span class="version-pill current" id="curr-version-val">v2.3.3</span>
                     </div>
                     <div class="version-row">
                         <span id="lbl-latest-commit">Τελευταίο GitHub Commit:</span>
@@ -2230,25 +2230,9 @@
             renderFilteredChart();
         }
 
-        // Get today's measurements strictly from 00:00:00 to 23:59:59
-        function getTodayHistory() {
-            if (!rawHistoryData || rawHistoryData.length === 0) return [];
-            const now = new Date();
-            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
-            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
-
-            return rawHistoryData.filter(item => {
-                const t = item.recorded_at_unix ? (item.recorded_at_unix * 1000) : new Date(item.timestamp.replace(" ", "T")).getTime();
-                return t >= startOfDay && t <= endOfDay;
-            });
-        }
-
-        // Filter history by hours or today
+        // Filter history by selected timeframe (rolling hours: 1H, 6H, 12H, 24H)
         function getFilteredHistory() {
             if (!rawHistoryData || rawHistoryData.length === 0) return [];
-            if (currentTimeframeHours === 24) {
-                return getTodayHistory();
-            }
             const now = new Date().getTime();
             const cutoff = now - (currentTimeframeHours * 60 * 60 * 1000);
             return rawHistoryData.filter(item => {
@@ -2384,7 +2368,6 @@
                 },
                 xaxis: {
                     type: 'datetime',
-                    min: currentTimeframeHours === 24 ? new Date(new Date().setHours(0, 0, 0, 0)).getTime() : undefined,
                     labels: {
                         datetimeUTC: false,
                         style: { fontSize: '11px', fontFamily: 'JetBrains Mono, monospace' }
@@ -2577,7 +2560,7 @@
 
         // --- EXPORT CSV ---
         function exportDataCSV() {
-            const dataToExport = currentTimeframeHours === 24 ? getTodayHistory() : getFilteredHistory();
+            const dataToExport = getFilteredHistory();
             if (!dataToExport || dataToExport.length === 0) {
                 alert('No data available to export.');
                 return;
@@ -2628,8 +2611,7 @@
                             updateStatus(latest.cpm);
                         }
 
-                        const todayHistory = getTodayHistory();
-                        updateSummaryKPIs(todayHistory, latest, data.dose_24h);
+                        updateSummaryKPIs(rawHistoryData, latest, data.dose_24h);
                     }
 
                     renderFilteredChart();

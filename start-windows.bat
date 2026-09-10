@@ -1,6 +1,6 @@
 @echo off
 cd /d "%~dp0"
-title Project Theia - Radiation Monitor & GMCMap Proxy
+title Project Theia - Radiation Monitor ^& GMCMap Proxy
 chcp 65001 >nul
 
 echo ============================================================
@@ -21,5 +21,11 @@ echo (If running on port 80 requires administrator privileges, run as Administra
 echo.
 
 .venv\Scripts\python.exe main.py
+set SERVER_EXIT_CODE=%ERRORLEVEL%
 
-pause
+if %SERVER_EXIT_CODE% neq 0 (
+    echo.
+    echo [ERROR] Server exited with error code %SERVER_EXIT_CODE%.
+    pause
+)
+
