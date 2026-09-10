@@ -1,0 +1,63 @@
+# ==============================================================================
+#                     PROJECT THEIA - GITIGNORE RULES
+# ==============================================================================
+
+# Local Environment & Secrets
+.env
+.env.local
+*.env
+
+# Local SQLite databases and journal/wal/shm files
+radiation_data.db
+radiation_data.db-journal
+radiation_data.db-wal
+radiation_data.db-shm
+config/radiation_data.db
+config/radiation_data.db-*
+config/*.db
+config/*.sqlite
+config/*.sqlite3
+
+# Local CSV data logs
+radiation_log.csv
+config/radiation_log.csv
+config/*.csv
+
+# Preserve template configs and documentation in config/
+!config/
+!config/*.json
+!config/README.md
+
+# Python Bytecode and Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+ENV.bak/
+venv.bak/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE and Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary files and logs
+*.log
+scratch/
+tmp/
+temp/
