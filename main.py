@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.1"
+VERSION = "2.3.2"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -612,31 +612,50 @@ def api_data():
                     "total_dose": latest_row["total_dose"],
                 }
 
-            time_limit = int((datetime.now() - timedelta(hours=24)).timestamp())
+            now = datetime.now()
+            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start_unix = int(today_start.timestamp())
+            today_end = today_start + timedelta(days=1) - timedelta(microseconds=1)
+            today_end_unix = int(today_end.timestamp())
+
+            # Fetch measurements: include at least rolling 24h as well so short timeframes (1H, 6H, 12H)
+            # have full context across midnight, while ensuring the calendar day (00:00 - 23:59) is fully covered.
+            rolling_24h_unix = int((now - timedelta(hours=24)).timestamp())
+            query_start_unix = min(today_start_unix, rolling_24h_unix)
+
             cursor.execute(
                 """
                 SELECT timestamp, recorded_at_unix, cpm, usvh
                 FROM measurements
-                WHERE recorded_at_unix >= ?
+                WHERE recorded_at_unix >= ? AND recorded_at_unix <= ?
                 ORDER BY recorded_at_unix ASC, id ASC
                 """,
-                (time_limit,),
+                (query_start_unix, today_end_unix),
             )
             history_rows = cursor.fetchall()
 
+        # Calculate today's 24h accumulated dose strictly from 00:00:00 to 23:59:59
+        today_rows = [
+            r for r in history_rows
+            if r["recorded_at_unix"] is not None and r["recorded_at_unix"] >= today_start_unix
+        ]
+
         dose_24h = 0.0
-        for i in range(1, len(history_rows)):
-            t_prev = history_rows[i - 1]["recorded_at_unix"]
-            t_curr = history_rows[i]["recorded_at_unix"]
+        for i in range(1, len(today_rows)):
+            t_prev = today_rows[i - 1]["recorded_at_unix"]
+            t_curr = today_rows[i]["recorded_at_unix"]
             if t_prev is not None and t_curr is not None:
                 dt_hours = (t_curr - t_prev) / 3600.0
                 if 0 < dt_hours <= 2.0:
-                    avg_rate = (history_rows[i - 1]["usvh"] + history_rows[i]["usvh"]) / 2.0
+                    avg_rate = (today_rows[i - 1]["usvh"] + today_rows[i]["usvh"]) / 2.0
                     dose_24h += avg_rate * dt_hours
+        if len(today_rows) == 1 and today_rows[0]["usvh"] is not None:
+            dose_24h = today_rows[0]["usvh"] / 60.0
 
         history = [
             {
                 "timestamp": row["timestamp"],
+                "recorded_at_unix": row["recorded_at_unix"],
                 "cpm": row["cpm"],
                 "usvh": row["usvh"],
             }
@@ -647,6 +666,8 @@ def api_data():
             "status": "success",
             "latest": latest,
             "dose_24h": round(dose_24h, 4),
+            "today_start": today_start.strftime("%Y-%m-%d 00:00:00"),
+            "today_end": today_end.strftime("%Y-%m-%d 23:59:59"),
             "history": history,
         })
     except Exception as exc:

@@ -887,6 +887,19 @@
             color: var(--text-primary);
             line-height: 1.1;
             letter-spacing: -0.02em;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+
+        .kpi-unit {
+            font-size: 0.92rem;
+            font-weight: 600;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-secondary);
+            letter-spacing: 0;
+            opacity: 0.85;
         }
 
         .kpi-subtext {
@@ -1530,19 +1543,23 @@
         <section class="kpi-strip">
             <div class="kpi-card">
                 <div class="kpi-header">
-                    <span class="kpi-label" id="kpi-lbl-max">ΜΕΓΙΣΤΟ 24ΩΡΟΥ</span>
+                    <span class="kpi-label" id="kpi-lbl-max">ΜΕΓΙΣΤΟ 24ΩΡΟΥ (μSv/h)</span>
                     <span class="kpi-icon">📈</span>
                 </div>
-                <div class="kpi-value" id="kpi-val-max" style="color: var(--warn-color);">--</div>
+                <div class="kpi-value" style="color: var(--warn-color);">
+                    <span id="kpi-val-max">--</span><span class="kpi-unit">μSv/h</span>
+                </div>
                 <div class="kpi-subtext" id="kpi-time-max">--:--:--</div>
             </div>
 
             <div class="kpi-card">
                 <div class="kpi-header">
-                    <span class="kpi-label" id="kpi-lbl-min">ΕΛΑΧΙΣΤΟ 24ΩΡΟΥ</span>
+                    <span class="kpi-label" id="kpi-lbl-min">ΕΛΑΧΙΣΤΟ 24ΩΡΟΥ (μSv/h)</span>
                     <span class="kpi-icon">📉</span>
                 </div>
-                <div class="kpi-value" id="kpi-val-min" style="color: var(--safe-color);">--</div>
+                <div class="kpi-value" style="color: var(--safe-color);">
+                    <span id="kpi-val-min">--</span><span class="kpi-unit">μSv/h</span>
+                </div>
                 <div class="kpi-subtext" id="kpi-time-min">--:--:--</div>
             </div>
 
@@ -1551,7 +1568,9 @@
                     <span class="kpi-label" id="kpi-lbl-dose">Συσσωρευμένη Δόση (24Ω)</span>
                     <span class="kpi-icon">🛡️</span>
                 </div>
-                <div class="kpi-value" id="kpi-val-dose" style="color: var(--theia-cyan);">--</div>
+                <div class="kpi-value" style="color: var(--theia-cyan);">
+                    <span id="kpi-val-dose">--</span><span class="kpi-unit">μSv</span>
+                </div>
                 <div class="kpi-subtext" id="kpi-sub-dose">24Ω Συσσωρευμένη (μSv)</div>
             </div>
 
@@ -1560,7 +1579,9 @@
                     <span class="kpi-label" id="kpi-lbl-samples">ΚΑΤΑΓΡΑΦΕΣ 24Ω</span>
                     <span class="kpi-icon">📡</span>
                 </div>
-                <div class="kpi-value" id="kpi-val-samples">--</div>
+                <div class="kpi-value">
+                    <span id="kpi-val-samples">--</span>
+                </div>
                 <div class="kpi-subtext" id="kpi-sub-samples">100% Ακεραιότητα</div>
             </div>
         </section>
@@ -1756,10 +1777,10 @@
 
             <div class="spectrum-markers">
                 <span>0.00 μSv/h</span>
-                <span>0.20 (Τυπικό)</span>
-                <span>0.50 (Όριο Ασφάλειας)</span>
-                <span>1.50 (Προσοχή)</span>
-                <span>5.00+ (Συναγερμός)</span>
+                <span>0.20 μSv/h (Τυπικό)</span>
+                <span>0.50 μSv/h (Όριο)</span>
+                <span>1.50 μSv/h (Προσοχή)</span>
+                <span>5.00+ μSv/h (Συναγερμός)</span>
             </div>
 
             <div class="spectrum-legend-grid">
@@ -1830,7 +1851,7 @@
                 </div>
                 <div class="chart-stat-item">
                     <span id="stat-lbl-peak">Κορυφή:</span>
-                    <strong id="stat-peak-val" style="color: var(--warn-color);">--</strong>
+                    <strong id="stat-peak-val" style="color: var(--warn-color);">-- μSv/h</strong>
                 </div>
                 <div class="chart-stat-item">
                     <span id="stat-lbl-count">Σύνολο Σημείων:</span>
@@ -1900,7 +1921,7 @@
                 <div class="version-info-box">
                     <div class="version-row">
                         <span id="lbl-curr-ver">Τρέχουσα Έκδοση:</span>
-                        <span class="version-pill current" id="curr-version-val">v2.3.1</span>
+                        <span class="version-pill current" id="curr-version-val">v2.3.2</span>
                     </div>
                     <div class="version-row">
                         <span id="lbl-latest-commit">Τελευταίο GitHub Commit:</span>
@@ -1954,8 +1975,8 @@
                 docTitle: "Theia - Σύστημα Επιτήρησης Ραδιενέργειας",
                 brandSubtitle: "Real-Time Radiation Monitoring System",
                 navTag: "Real-Time Radiation Monitoring System",
-                kpiMax: "ΜΕΓΙΣΤΟ 24ΩΡΟΥ",
-                kpiMin: "ΕΛΑΧΙΣΤΟ 24ΩΡΟΥ",
+                kpiMax: "ΜΕΓΙΣΤΟ 24ΩΡΟΥ (μSv/h)",
+                kpiMin: "ΕΛΑΧΙΣΤΟ 24ΩΡΟΥ (μSv/h)",
                 kpiDose: "Συσσωρευμένη Δόση (24Ω)",
                 kpiSubDose: "24Ω Συσσωρευμένη (μSv)",
                 kpiSamples: "ΚΑΤΑΓΡΑΦΕΣ 24Ω",
@@ -2009,8 +2030,8 @@
                 docTitle: "Theia - Advanced Radiation Monitor",
                 brandSubtitle: "Real-Time Radiation Monitoring System",
                 navTag: "Real-Time Radiation Monitoring System",
-                kpiMax: "24H PEAK MAXIMUM",
-                kpiMin: "24H MINIMUM",
+                kpiMax: "24H PEAK MAXIMUM (μSv/h)",
+                kpiMin: "24H MINIMUM (μSv/h)",
                 kpiDose: "Accumulated Dose (24h)",
                 kpiSubDose: "24h Accumulated (μSv)",
                 kpiSamples: "24H READINGS",
@@ -2209,13 +2230,29 @@
             renderFilteredChart();
         }
 
-        // Filter history by hours
+        // Get today's measurements strictly from 00:00:00 to 23:59:59
+        function getTodayHistory() {
+            if (!rawHistoryData || rawHistoryData.length === 0) return [];
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+            const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
+            return rawHistoryData.filter(item => {
+                const t = item.recorded_at_unix ? (item.recorded_at_unix * 1000) : new Date(item.timestamp.replace(" ", "T")).getTime();
+                return t >= startOfDay && t <= endOfDay;
+            });
+        }
+
+        // Filter history by hours or today
         function getFilteredHistory() {
             if (!rawHistoryData || rawHistoryData.length === 0) return [];
+            if (currentTimeframeHours === 24) {
+                return getTodayHistory();
+            }
             const now = new Date().getTime();
             const cutoff = now - (currentTimeframeHours * 60 * 60 * 1000);
             return rawHistoryData.filter(item => {
-                const t = new Date(item.timestamp.replace(" ", "T")).getTime();
+                const t = item.recorded_at_unix ? (item.recorded_at_unix * 1000) : new Date(item.timestamp.replace(" ", "T")).getTime();
                 return t >= cutoff;
             });
         }
@@ -2347,6 +2384,7 @@
                 },
                 xaxis: {
                     type: 'datetime',
+                    min: currentTimeframeHours === 24 ? new Date(new Date().setHours(0, 0, 0, 0)).getTime() : undefined,
                     labels: {
                         datetimeUTC: false,
                         style: { fontSize: '11px', fontFamily: 'JetBrains Mono, monospace' }
@@ -2359,7 +2397,19 @@
                     theme: currentTheme,
                     shared: true,
                     x: { format: 'dd MMM yyyy - HH:mm:ss' },
-                    style: { fontFamily: 'Outfit, sans-serif' }
+                    style: { fontFamily: 'Outfit, sans-serif' },
+                    y: {
+                        formatter: function(val, opts) {
+                            if (val === undefined || val === null) return "--";
+                            if (currentMetricView === 'both') {
+                                return opts.seriesIndex === 0 ? `${val} CPM` : `${Number(val).toFixed(4)} μSv/h`;
+                            } else if (currentMetricView === 'cpm') {
+                                return `${val} CPM`;
+                            } else {
+                                return `${Number(val).toFixed(4)} μSv/h`;
+                            }
+                        }
+                    }
                 },
                 legend: {
                     position: 'top',
@@ -2472,9 +2522,17 @@
             document.getElementById('usvh-val').style.color = statusColor;
         }
 
-        // --- CALCULATE SUMMARY KPIS ---
+        // --- CALCULATE SUMMARY KPIS (Strictly for Today 00:00 - 23:59) ---
         function updateSummaryKPIs(history, latest, dose24hBackend) {
-            if (!history || history.length === 0) return;
+            if (!history || history.length === 0) {
+                document.getElementById('kpi-val-max').innerText = '--';
+                document.getElementById('kpi-time-max').innerText = '--:--:--';
+                document.getElementById('kpi-val-min').innerText = '--';
+                document.getElementById('kpi-time-min').innerText = '--:--:--';
+                document.getElementById('kpi-val-dose').innerText = '0.0000';
+                document.getElementById('kpi-val-samples').innerText = '0';
+                return;
+            }
 
             let maxUsvh = -1, minUsvh = 999999, maxTime = '--', minTime = '--';
             history.forEach(item => {
@@ -2488,13 +2546,13 @@
                 }
             });
 
-            document.getElementById('kpi-val-max').innerText = maxUsvh.toFixed(4);
-            document.getElementById('kpi-time-max').innerText = `Ώρα: ${maxTime}`;
+            document.getElementById('kpi-val-max').innerText = maxUsvh >= 0 ? maxUsvh.toFixed(4) : '--';
+            document.getElementById('kpi-time-max').innerText = maxTime !== '--' ? `Ώρα: ${maxTime}` : '--:--:--';
 
-            document.getElementById('kpi-val-min').innerText = minUsvh.toFixed(4);
-            document.getElementById('kpi-time-min').innerText = `Ώρα: ${minTime}`;
+            document.getElementById('kpi-val-min').innerText = minUsvh < 999999 ? minUsvh.toFixed(4) : '--';
+            document.getElementById('kpi-time-min').innerText = minTime !== '--' ? `Ώρα: ${minTime}` : '--:--:--';
 
-            // Calculate 24h accumulated dose
+            // Calculate 24h accumulated dose strictly from 00:00:00 of today
             let dose24 = 0;
             if (dose24hBackend !== undefined && dose24hBackend !== null) {
                 dose24 = dose24hBackend;
@@ -2502,8 +2560,8 @@
                 dose24 = latest.dose_24h;
             } else if (history && history.length > 1) {
                 for (let i = 1; i < history.length; i++) {
-                    const t0 = new Date(history[i - 1].timestamp.replace(" ", "T")).getTime();
-                    const t1 = new Date(history[i].timestamp.replace(" ", "T")).getTime();
+                    const t0 = history[i - 1].recorded_at_unix ? (history[i - 1].recorded_at_unix * 1000) : new Date(history[i - 1].timestamp.replace(" ", "T")).getTime();
+                    const t1 = history[i].recorded_at_unix ? (history[i].recorded_at_unix * 1000) : new Date(history[i].timestamp.replace(" ", "T")).getTime();
                     const dtHours = (t1 - t0) / (1000 * 60 * 60);
                     if (dtHours > 0 && dtHours <= 2) {
                         dose24 += ((history[i - 1].usvh + history[i].usvh) / 2) * dtHours;
@@ -2519,12 +2577,13 @@
 
         // --- EXPORT CSV ---
         function exportDataCSV() {
-            if (!rawHistoryData || rawHistoryData.length === 0) {
+            const dataToExport = currentTimeframeHours === 24 ? getTodayHistory() : getFilteredHistory();
+            if (!dataToExport || dataToExport.length === 0) {
                 alert('No data available to export.');
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,Timestamp,CPM,uSv/h\r\n";
-            rawHistoryData.forEach(row => {
+            dataToExport.forEach(row => {
                 csvContent += `"${row.timestamp}",${row.cpm},${row.usvh}\r\n`;
             });
             const encodedUri = encodeURI(csvContent);
@@ -2569,7 +2628,8 @@
                             updateStatus(latest.cpm);
                         }
 
-                        updateSummaryKPIs(rawHistoryData, latest, data.dose_24h);
+                        const todayHistory = getTodayHistory();
+                        updateSummaryKPIs(todayHistory, latest, data.dose_24h);
                     }
 
                     renderFilteredChart();
