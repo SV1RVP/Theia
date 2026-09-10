@@ -7,13 +7,13 @@ chcp 65001 >nul
 echo.
 echo ============================================================
 echo       Project Theia - Windows Universal Installer
-echo       Creator: Alexandros - Ermis Tsourapas (SV1RVP)
+echo       Author: Alexandros - Ermis Tsourapas
 echo ============================================================
 echo.
 
 :: 1. Check Python installation
 where python >nul 2>nul
-if %ERRORLEVEL% neq 0 (
+if errorlevel 1 (
     echo [ERROR] Python was not found in your PATH!
     echo Please install Python 3.9+ from https://www.python.org/
     echo Make sure to check "Add Python to PATH" during installation.
@@ -22,15 +22,15 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-for /f "tokens=*" %%v in ('python --version 2^>^&1') do set PYTHON_VER=%%v
-echo [OK] Detected %PYTHON_VER%
+python --version
+echo [OK] Python detected successfully.
 
 :: 2. Create Virtual Environment
 echo.
 echo Setting up Python Virtual Environment (.venv)...
 if not exist ".venv" (
     python -m venv .venv
-    if %ERRORLEVEL% neq 0 (
+    if errorlevel 1 (
         echo [ERROR] Failed to create virtual environment.
         pause
         exit /b 1
@@ -43,9 +43,9 @@ if not exist ".venv" (
 :: 3. Install Requirements
 echo.
 echo Installing and upgrading dependencies...
-.venv\Scripts\python.exe -m pip install --upgrade pip
-.venv\Scripts\pip.exe install -r requirements.txt
-if %ERRORLEVEL% neq 0 (
+call .venv\Scripts\python.exe -m pip install --upgrade pip
+call .venv\Scripts\pip.exe install -r requirements.txt
+if errorlevel 1 (
     echo [ERROR] Failed to install dependencies from requirements.txt.
     pause
     exit /b 1
@@ -58,11 +58,11 @@ if not exist "config" (
     mkdir config
 )
 echo [OK] Configuration files located in config\
-echo [NOTE] Edit config\app.json and platform files (gmcmap.json, radmon.json, etc.) as needed.
+echo [NOTE] Edit config\app.json and platform files as needed.
 
 echo.
 echo ============================================================
-echo  Installation Complete! / Η εγκατάσταση ολοκληρώθηκε!
+echo  Installation Complete!
 echo.
 echo  To start Project Theia on Windows:
 echo    Double click "start-windows.bat"
