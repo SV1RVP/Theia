@@ -35,6 +35,10 @@ Just as the Titaness Theia endowed humanity with the gift of physical sight, **P
 
 The server intercepts telemetry emitted by radiation monitors over your local network (LAN), persists the readings in local SQLite and CSV formats, renders an ultra-clean live dashboard, and asynchronously pushes measurements to global citizen-science platforms (**GMCMap.com**, **Radmon.org**, **Safecast.org**, and **OpenSenseMap.org**) without adding any latency to the detector.
 
+<p align="center">
+  <img src="logo/Dashboard.png" alt="Project Theia Live Web Dashboard" width="100%">
+</p>
+
 ---
 
 ### ⚙️ Complete Key Features
@@ -196,6 +200,10 @@ In your Geiger counter's WiFi settings (e.g. GMC-500+):
 Το **Project Theia** είναι ένας ελαφρύς, ασφαλής τοπικός διακομιστής (proxy server), καταγραφέας ραδιενέργειας και σύγχρονος πίνακας ελέγχου (Web Dashboard) για μετρητές Geiger-Müller με υποστήριξη WiFi (όπως τα GMC-300, GMC-500+, GMC-600+ ή ιδιοκατασκευές ESP32/ESP8266).
 
 Το σύστημα λαμβάνει τις μετρήσεις του ανιχνευτή μέσω του τοπικού δικτύου (LAN), τις αποθηκεύει σε βάση SQLite και αρχείο CSV, τις προβάλλει σε έναν καλαίσθητο πίνακα ελέγχου στο browser και τις προωθεί ασύγχρονα σε παγκόσμια δίκτυα επιτήρησης (**GMCMap.com**, **Radmon.org**, **Safecast.org**, **OpenSenseMap.org**) χωρίς να καθυστερεί τον ανιχνευτή.
+
+<p align="center">
+  <img src="logo/Dashboard.png" alt="Πίνακας Ελέγχου Project Theia" width="100%">
+</p>
 
 ---
 
