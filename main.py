@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.9"
+VERSION = "2.4.0"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -448,21 +448,21 @@ def save_measurement(cpm, acpm, usvh, dose):
 
 # --- CLOUD FORWARDERS ---
 
-def build_gmcmap_url(cpm, usvh):
+def build_gmcmap_url(cpm, acpm, usvh):
     return (
         f"http://www.gmcmap.com/log2.asp?AID={USER_ACCOUNT_ID}"
-        f"&GID={GEIGER_COUNTER_ID}&CPM={cpm}&uSV={usvh}"
+        f"&GID={GEIGER_COUNTER_ID}&CPM={cpm}&ACPM={acpm}&uSV={usvh}"
     )
 
 
-def upload_to_gmcmap(cpm, usvh, timestamp):
+def upload_to_gmcmap(cpm, acpm, usvh, timestamp):
     headers = {
         "User-Agent": "GMC-500+ WiFi V2.45",
         "Host": "www.gmcmap.com",
         "Connection": "close",
     }
     try:
-        response = requests.get(build_gmcmap_url(cpm, usvh), headers=headers, timeout=10)
+        response = requests.get(build_gmcmap_url(cpm, acpm, usvh), headers=headers, timeout=10)
         if response.status_code == 200:
             print(f"[{timestamp}] [GMCMap.com] -> Successful upload! Response: {response.text.strip()}")
             return True
@@ -566,13 +566,15 @@ def mark_upload_complete(measurement_id):
         conn.commit()
 
 
-def enqueue_cloud_uploads(measurement_id, cpm, usvh, timestamp):
+def enqueue_cloud_uploads(measurement_id, cpm, acpm, usvh, dose, timestamp):
     if gmcmap_enabled():
         upload_queue.put({
             "target": "gmcmap",
             "measurement_id": measurement_id,
             "cpm": cpm,
+            "acpm": acpm,
             "usvh": usvh,
+            "dose": dose,
             "timestamp": timestamp,
             "attempt": 1,
             "ready_at": time.time(),
@@ -583,7 +585,9 @@ def enqueue_cloud_uploads(measurement_id, cpm, usvh, timestamp):
             "target": "radmon",
             "measurement_id": measurement_id,
             "cpm": cpm,
+            "acpm": acpm,
             "usvh": usvh,
+            "dose": dose,
             "timestamp": timestamp,
             "attempt": 1,
             "ready_at": time.time(),
@@ -594,7 +598,9 @@ def enqueue_cloud_uploads(measurement_id, cpm, usvh, timestamp):
             "target": "safecast",
             "measurement_id": measurement_id,
             "cpm": cpm,
+            "acpm": acpm,
             "usvh": usvh,
+            "dose": dose,
             "timestamp": timestamp,
             "attempt": 1,
             "ready_at": time.time(),
@@ -605,7 +611,9 @@ def enqueue_cloud_uploads(measurement_id, cpm, usvh, timestamp):
             "target": "opensensemap",
             "measurement_id": measurement_id,
             "cpm": cpm,
+            "acpm": acpm,
             "usvh": usvh,
+            "dose": dose,
             "timestamp": timestamp,
             "attempt": 1,
             "ready_at": time.time(),
@@ -628,7 +636,9 @@ def upload_worker():
             success = False
 
             if target == "gmcmap":
-                success = upload_to_gmcmap(job["cpm"], job["usvh"], job["timestamp"])
+                success = upload_to_gmcmap(
+                    job["cpm"], job.get("acpm", 0.0), job["usvh"], job["timestamp"]
+                )
                 if success:
                     mark_upload_complete(job["measurement_id"])
             elif target == "radmon":
@@ -690,7 +700,7 @@ def log_endpoint():
         )
 
         measurement_id, timestamp = save_measurement(cpm, acpm, usvh, dose)
-        enqueue_cloud_uploads(measurement_id, cpm, usvh, timestamp)
+        enqueue_cloud_uploads(measurement_id, cpm, acpm, usvh, dose, timestamp)
         return "OK", 200
     except ValueError as exc:
         return f"Bad Request: {exc}", 400
