@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.3"
+VERSION = "2.3.4"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -63,6 +63,15 @@ def load_config_file(filename, default_dict):
 APP_CONFIG = load_config_file(
     "app.json",
     {
+        "_comment": "Project Theia - Project & Server Settings / Ρυθμίσεις Συστήματος",
+        "_instructions": {
+            "port": "Listening port (default 80, or 5000 / 8080) / Θύρα ακρόασης.",
+            "retention_days": "Database retention limit in days (0 for unlimited) / Ημέρες διατήρησης στη βάση.",
+            "ingest_auth_token": "Optional secret token for /log2.asp / Μυστικό token ασφαλείας.",
+            "allowed_device_ips": "Allowed IP/CIDR list for LAN access / Επιτρεπόμενες IP/υποδίκτυα.",
+            "max_upload_retries": "Upload retry attempts on connection error / Επαναπροσπάθειες αποστολής.",
+            "upload_retry_delay_seconds": "Delay between upload retries in seconds / Χρόνος αναμονής επανάληψης.",
+        },
         "port": 80,
         "retention_days": 30,
         "ingest_auth_token": "",
@@ -74,17 +83,45 @@ APP_CONFIG = load_config_file(
 
 GMCMAP_CONFIG = load_config_file(
     "gmcmap.json",
-    {"enabled": False, "user_account_id": "", "geiger_counter_id": ""},
+    {
+        "_comment": "GMCMap.com (GQ Electronics) Configuration / Ρυθμίσεις GMCMap.com",
+        "_instructions": {
+            "enabled": "true or false / true ή false για ενεργοποίηση",
+            "user_account_id": "Your User Account ID from GMCMap.com / Το User Account ID σας από το GMCMap.com",
+            "geiger_counter_id": "Your Geiger Counter ID from GMCMap.com / Το Geiger Counter ID σας από το GMCMap.com",
+        },
+        "enabled": False,
+        "user_account_id": "",
+        "geiger_counter_id": "",
+    },
 )
 
 RADMON_CONFIG = load_config_file(
     "radmon.json",
-    {"enabled": False, "username": "", "password": ""},
+    {
+        "_comment": "Radmon.org Community Network Configuration / Ρυθμίσεις Radmon.org",
+        "_instructions": {
+            "enabled": "true or false / true ή false για ενεργοποίηση",
+            "username": "Your Radmon.org username / Το όνομα χρήστη σας στο Radmon.org",
+            "password": "Your Radmon.org data submission password / Ο κωδικός υποβολής δεδομένων σας στο Radmon.org",
+        },
+        "enabled": False,
+        "username": "",
+        "password": "",
+    },
 )
 
 SAFECAST_CONFIG = load_config_file(
     "safecast.json",
     {
+        "_comment": "Safecast.org Global Open Data Configuration / Ρυθμίσεις Safecast.org",
+        "_instructions": {
+            "enabled": "true or false / true ή false για ενεργοποίηση",
+            "api_key": "Your Safecast API key / Το API key σας από το Safecast.org",
+            "device_id": "Safecast device ID / Το αναγνωριστικό συσκευής (Device ID) στο Safecast",
+            "latitude": "Sensor coordinates (e.g. 37.9838) / Γεωγραφικό πλάτος αισθητήρα",
+            "longitude": "Sensor coordinates (e.g. 23.7275) / Γεωγραφικό μήκος αισθητήρα",
+        },
         "enabled": False,
         "api_key": "",
         "device_id": "",
@@ -95,7 +132,17 @@ SAFECAST_CONFIG = load_config_file(
 
 OPENSENSEMAP_CONFIG = load_config_file(
     "opensensemap.json",
-    {"enabled": False, "sensebox_id": "", "sensor_id": ""},
+    {
+        "_comment": "OpenSenseMap.org Citizen Science Configuration / Ρυθμίσεις OpenSenseMap.org",
+        "_instructions": {
+            "enabled": "true or false / true ή false για ενεργοποίηση",
+            "sensebox_id": "Your senseBox ID / Το senseBox ID σας από το OpenSenseMap",
+            "sensor_id": "Radiation sensor ID on OpenSenseMap / Το ID του αισθητήρα ακτινοβολίας στο OpenSenseMap",
+        },
+        "enabled": False,
+        "sensebox_id": "",
+        "sensor_id": "",
+    },
 )
 
 # Optional Environment Overrides (Docker / CLI / test fixtures)

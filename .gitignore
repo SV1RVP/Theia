@@ -58,6 +58,7 @@ Desktop.ini
 
 # Temporary files and logs
 *.log
+*.bak
 scratch/
 tmp/
 temp/

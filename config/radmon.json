@@ -1,4 +1,10 @@
 {
+  "_comment": "Radmon.org Community Network Configuration / Ρυθμίσεις Radmon.org",
+  "_instructions": {
+    "enabled": "true or false / true ή false για ενεργοποίηση",
+    "username": "Your Radmon.org username / Το όνομα χρήστη σας στο Radmon.org",
+    "password": "Your Radmon.org data submission password / Ο κωδικός υποβολής δεδομένων σας στο Radmon.org"
+  },
   "enabled": false,
   "username": "",
   "password": ""

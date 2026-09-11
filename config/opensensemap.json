@@ -1,4 +1,10 @@
 {
+  "_comment": "OpenSenseMap.org Citizen Science Configuration / Ρυθμίσεις OpenSenseMap.org",
+  "_instructions": {
+    "enabled": "true or false / true ή false για ενεργοποίηση",
+    "sensebox_id": "Your senseBox ID / Το senseBox ID σας από το OpenSenseMap",
+    "sensor_id": "Radiation sensor ID on OpenSenseMap / Το ID του αισθητήρα ακτινοβολίας στο OpenSenseMap"
+  },
   "enabled": false,
   "sensebox_id": "",
   "sensor_id": ""

@@ -1,4 +1,10 @@
 {
+  "_comment": "GMCMap.com (GQ Electronics) Configuration / Ρυθμίσεις GMCMap.com",
+  "_instructions": {
+    "enabled": "true or false / true ή false για ενεργοποίηση",
+    "user_account_id": "Your User Account ID from GMCMap.com / Το User Account ID σας από το GMCMap.com",
+    "geiger_counter_id": "Your Geiger Counter ID from GMCMap.com / Το Geiger Counter ID σας από το GMCMap.com"
+  },
   "enabled": false,
   "user_account_id": "",
   "geiger_counter_id": ""

@@ -1,4 +1,13 @@
 {
+  "_comment": "Project Theia - Project & Server Settings / Ρυθμίσεις Συστήματος",
+  "_instructions": {
+    "port": "Listening port (default 80, or 5000 / 8080) / Θύρα ακρόασης.",
+    "retention_days": "Database retention limit in days (0 for unlimited) / Ημέρες διατήρησης στη βάση.",
+    "ingest_auth_token": "Optional secret token for /log2.asp / Μυστικό token ασφαλείας.",
+    "allowed_device_ips": "Allowed IP/CIDR list for LAN access / Επιτρεπόμενες IP/υποδίκτυα.",
+    "max_upload_retries": "Upload retry attempts on connection error / Επαναπροσπάθειες αποστολής.",
+    "upload_retry_delay_seconds": "Delay between upload retries in seconds / Χρόνος αναμονής επανάληψης."
+  },
   "port": 80,
   "retention_days": 30,
   "ingest_auth_token": "",
