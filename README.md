@@ -97,6 +97,16 @@ All system settings, platform credentials, and local historical databases are cl
 
 *Note: All files inside `config/` are strictly preserved and never overwritten during system updates.*
 
+> [!TIP]
+> **Safecast.org Setup Guide**:
+> 1. Register an account on **both** platforms:
+>    - API Portal: [https://api.safecast.org/en-US/users/sign_up](https://api.safecast.org/en-US/users/sign_up)
+>    - Simplemap Map Portal: [https://simplemap.safecast.org](https://simplemap.safecast.org)
+> 2. Confirm your email address from the verification link sent by `api.safecast.org`.
+> 3. Go to [https://api.safecast.org/en-US/users/edit](https://api.safecast.org/en-US/users/edit) and copy your 20-character **API key**.
+> 4. Go to your Simplemap profile at [https://simplemap.safecast.org/profile](https://simplemap.safecast.org/profile) and paste your API key in the **"Safecast API Key"** field.
+> 5. Find your device identifier (Device ID) at [https://api.safecast.org/en-US/devices](https://api.safecast.org/en-US/devices) and enter it in `config/safecast.json`.
+
 ---
 
 ### 🚀 Installation & Quick Start
@@ -260,6 +270,16 @@ In your Geiger counter's WiFi settings (e.g. GMC-500+):
 | `config/radiation_log.csv` | Αρχείο Καταγραφής CSV | Συνεχής καταγραφή ακατέργαστων μετρήσεων |
 
 *Σημείωση: Όλα τα αρχεία μέσα στον φάκελο `config/` προστατεύονται απόλυτα και ΔΕΝ αντικαθίστανται ποτέ κατά τις ενημερώσεις.*
+
+> [!TIP]
+> **Οδηγός Ρύθμισης Safecast.org**:
+> 1. Απαιτείται εγγραφή λογαριασμού και στις **δύο** πλατφόρμες του Safecast:
+>    - Στο API Portal: [https://api.safecast.org/en-US/users/sign_up](https://api.safecast.org/en-US/users/sign_up)
+>    - Στο Simplemap Portal: [https://simplemap.safecast.org](https://simplemap.safecast.org)
+> 2. Επιβεβαιώστε το email σας από το link ενεργοποίησης που σας στέλνει το `api.safecast.org`.
+> 3. Μπείτε στο [https://api.safecast.org/en-US/users/edit](https://api.safecast.org/en-US/users/edit) και αντιγράψτε το 20ψήφιο **API key** σας.
+> 4. Μπείτε στο προφίλ σας στο Simplemap: [https://simplemap.safecast.org/profile](https://simplemap.safecast.org/profile) και επικολλήστε το API key στο πεδίο **"Safecast API Key"**.
+> 5. Βρείτε το σωστό αναγνωριστικό συσκευής (**Device ID**) από τη λίστα στη διεύθυνση [https://api.safecast.org/en-US/devices](https://api.safecast.org/en-US/devices) και συμπληρώστε το στο πεδίο `"device_id"` του `config/safecast.json`.
 
 ---
 

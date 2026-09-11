@@ -2,8 +2,8 @@
   "_comment": "Safecast.org Global Open Data Configuration / Ρυθμίσεις Safecast.org",
   "_instructions": {
     "enabled": "true or false / true ή false για ενεργοποίηση",
-    "api_key": "Your Safecast API key / Το API key σας από το Safecast.org",
-    "device_id": "Safecast device ID / Το αναγνωριστικό συσκευής (Device ID) στο Safecast",
+    "api_key": "Your Safecast API key from https://api.safecast.org/en-US/users/edit. NOTE: Register at BOTH https://api.safecast.org and https://simplemap.safecast.org. Paste this API Key into https://simplemap.safecast.org/profile under 'Safecast API Key' / Το API key σας από το https://api.safecast.org. ΣΗΜΕΙΩΣΗ: Απαιτείται εγγραφή και στα 2 site (api.safecast.org & simplemap.safecast.org) και επικόλληση του API key στο https://simplemap.safecast.org/profile στην ενότητα 'Safecast API Key'",
+    "device_id": "Safecast device ID found at https://api.safecast.org/en-US/devices / Το ID της συσκευής σας όπως εμφανίζεται στο https://api.safecast.org/en-US/devices",
     "latitude": "Sensor coordinates (e.g. 37.9838) / Γεωγραφικό πλάτος αισθητήρα",
     "longitude": "Sensor coordinates (e.g. 23.7275) / Γεωγραφικό μήκος αισθητήρα"
   },

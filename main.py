@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.8"
+VERSION = "2.3.9"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -144,8 +144,8 @@ SAFECAST_CONFIG = load_config_file(
         "_comment": "Safecast.org Global Open Data Configuration / Ρυθμίσεις Safecast.org",
         "_instructions": {
             "enabled": "true or false / true ή false για ενεργοποίηση",
-            "api_key": "Your Safecast API key / Το API key σας από το Safecast.org",
-            "device_id": "Safecast device ID / Το αναγνωριστικό συσκευής (Device ID) στο Safecast",
+            "api_key": "Your Safecast API key from https://api.safecast.org/en-US/users/edit. NOTE: Register at BOTH https://api.safecast.org and https://simplemap.safecast.org. Paste this API Key into https://simplemap.safecast.org/profile under 'Safecast API Key' / Το API key σας από το https://api.safecast.org. ΣΗΜΕΙΩΣΗ: Απαιτείται εγγραφή και στα 2 site (api.safecast.org & simplemap.safecast.org) και επικόλληση του API key στο https://simplemap.safecast.org/profile στην ενότητα 'Safecast API Key'",
+            "device_id": "Safecast device ID found at https://api.safecast.org/en-US/devices / Το ID της συσκευής σας όπως εμφανίζεται στο https://api.safecast.org/en-US/devices",
             "latitude": "Sensor coordinates (e.g. 37.9838) / Γεωγραφικό πλάτος αισθητήρα",
             "longitude": "Sensor coordinates (e.g. 23.7275) / Γεωγραφικό μήκος αισθητήρα",
         },
@@ -207,14 +207,14 @@ RADMON_USERNAME = RADMON_CONFIG.get("username", "")
 RADMON_PASSWORD = RADMON_CONFIG.get("password", "")
 
 SAFECAST_ENABLED = SAFECAST_CONFIG.get("enabled", False)
-SAFECAST_API_KEY = SAFECAST_CONFIG.get("api_key", "")
-SAFECAST_DEVICE_ID = SAFECAST_CONFIG.get("device_id", "")
-SAFECAST_LATITUDE = SAFECAST_CONFIG.get("latitude", "")
-SAFECAST_LONGITUDE = SAFECAST_CONFIG.get("longitude", "")
+SAFECAST_API_KEY = str(SAFECAST_CONFIG.get("api_key", "")).strip()
+SAFECAST_DEVICE_ID = str(SAFECAST_CONFIG.get("device_id", "")).strip()
+SAFECAST_LATITUDE = str(SAFECAST_CONFIG.get("latitude", "")).strip()
+SAFECAST_LONGITUDE = str(SAFECAST_CONFIG.get("longitude", "")).strip()
 
 OPENSENSEMAP_ENABLED = OPENSENSEMAP_CONFIG.get("enabled", False)
-OPENSENSEMAP_SENSEBOX_ID = OPENSENSEMAP_CONFIG.get("sensebox_id", "")
-OPENSENSEMAP_SENSOR_ID = OPENSENSEMAP_CONFIG.get("sensor_id", "")
+OPENSENSEMAP_SENSEBOX_ID = str(OPENSENSEMAP_CONFIG.get("sensebox_id", "")).strip()
+OPENSENSEMAP_SENSOR_ID = str(OPENSENSEMAP_CONFIG.get("sensor_id", "")).strip()
 
 upload_queue = queue.Queue()
 upload_worker_started = False
