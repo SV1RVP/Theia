@@ -31,13 +31,17 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.4"
+VERSION = "2.3.5"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
 
 def load_config_file(filename, default_dict):
-    """Load JSON config from config/ directory with fallback to default_dict."""
+    """
+    Load JSON config from config/ directory with fallback to default_dict.
+    Safely enriches existing local files with documentation/schema updates without
+    overwriting user configurations.
+    """
     filepath = os.path.join(CONFIG_DIR, filename)
     if not os.path.exists(filepath):
         os.makedirs(CONFIG_DIR, exist_ok=True)
@@ -50,10 +54,33 @@ def load_config_file(filename, default_dict):
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
-            merged = dict(default_dict)
-            if isinstance(data, dict):
-                merged.update(data)
+
+        merged = dict(default_dict)
+        if isinstance(data, dict):
+            needs_rewrite = False
+            # Check if any documentation or default schema keys are missing
+            for key in default_dict:
+                if key not in data:
+                    needs_rewrite = True
+                    break
+            if data.get("_instructions") != default_dict.get("_instructions") or data.get("_comment") != default_dict.get("_comment"):
+                needs_rewrite = True
+
+            # Preserve all user configuration settings from existing file
+            for k, v in data.items():
+                if not k.startswith("_"):
+                    merged[k] = v
+
+            # If the file on disk was missing documentation or schema keys, enrich it safely
+            if needs_rewrite:
+                try:
+                    with open(filepath, "w", encoding="utf-8") as fw:
+                        json.dump(merged, fw, indent=2, ensure_ascii=False)
+                except Exception as write_err:
+                    print(f"[!] Notice: could not rewrite enriched {filename}: {write_err}")
+
             return merged
+        return merged
     except Exception as exc:
         print(f"[!] Warning reading {filename}: {exc}. Using default configuration.")
         return dict(default_dict)
@@ -843,9 +870,69 @@ def perform_system_update():
             if not rel_parts:
                 continue
 
-            # CRITICAL: STRICTLY EXCLUDE config/ directory and local environment/venv/git
             first_segment = rel_parts[0].lower()
-            if first_segment in ("config", ".git", ".venv", "__pycache__"):
+
+            # Strictly ignore internal / virtualenv / git directories
+            if first_segment in (".git", ".venv", "__pycache__"):
+                continue
+
+            # Special safe handling for config/ directory
+            if first_segment == "config":
+                file_name = rel_parts[-1].lower()
+
+                # STRICTLY PROTECT databases, logs, wal files, and backups
+                if file_name.endswith((".db", ".db-wal", ".db-shm", ".db-journal", ".csv", ".bak", ".log")):
+                    continue
+
+                target_path = os.path.join(BASE_DIR, *rel_parts)
+
+                # Smart non-destructive merge for JSON config files
+                if file_name.endswith(".json"):
+                    try:
+                        with zf.open(member) as src:
+                            incoming_content = src.read().decode("utf-8")
+                            incoming_json = json.loads(incoming_content)
+
+                        if os.path.exists(target_path):
+                            try:
+                                with open(target_path, "r", encoding="utf-8") as f:
+                                    local_json = json.load(f)
+                            except Exception:
+                                local_json = {}
+
+                            # Start with incoming JSON template (has latest comments, instructions & defaults)
+                            merged_config = dict(incoming_json) if isinstance(incoming_json, dict) else {}
+                            # Preserve all local user settings & credentials
+                            if isinstance(local_json, dict):
+                                for k, v in local_json.items():
+                                    if not k.startswith("_"):
+                                        merged_config[k] = v
+
+                            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                            with open(target_path, "w", encoding="utf-8") as f:
+                                json.dump(merged_config, f, indent=2, ensure_ascii=False)
+                            updated_files += 1
+                            continue
+                        else:
+                            # New config file from repository - write directly
+                            os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                            with open(target_path, "w", encoding="utf-8") as f:
+                                json.dump(incoming_json, f, indent=2, ensure_ascii=False)
+                            updated_files += 1
+                            continue
+                    except Exception as exc:
+                        print(f"[!] Warning merging config file {rel_path}: {exc}")
+                        continue
+
+                # Safely update documentation in config/ (e.g. config/README.md)
+                if file_name.endswith(".md"):
+                    os.makedirs(os.path.dirname(target_path), exist_ok=True)
+                    with zf.open(member) as src, open(target_path, "wb") as dst:
+                        shutil.copyfileobj(src, dst)
+                    updated_files += 1
+                    continue
+
+                # Ignore any other unexpected files in config/
                 continue
 
             target_path = os.path.join(BASE_DIR, *rel_parts)
