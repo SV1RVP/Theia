@@ -18,7 +18,7 @@ import threading
 import time
 import zipfile
 from contextlib import closing
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Flask, jsonify, render_template, request, send_from_directory
 import requests
@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.7"
+VERSION = "2.3.8"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -499,13 +499,13 @@ def upload_to_safecast(cpm, timestamp):
     url = "https://api.safecast.org/measurements.json"
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "Project-Theia/2.2",
+        "User-Agent": f"Project-Theia/{VERSION}",
     }
     params = {"api_key": SAFECAST_API_KEY}
     measurement = {
         "value": cpm,
         "unit": "cpm",
-        "captured_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "captured_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     if SAFECAST_LATITUDE and SAFECAST_LONGITUDE:
         try:
@@ -525,6 +525,9 @@ def upload_to_safecast(cpm, timestamp):
         if response.status_code in (200, 201):
             print(f"[{timestamp}] [Safecast.org] -> Successful upload! (HTTP {response.status_code})")
             return True
+        if response.status_code == 401:
+            print(f"[{timestamp}] [Safecast.org] -> Authentication Error (HTTP 401): Invalid API Key. Please verify 'api_key' in config/safecast.json (https://api.safecast.org)")
+            return False
         print(f"[{timestamp}] [Safecast.org] -> API Error (HTTP {response.status_code}): {response.text.strip()}")
         return False
     except Exception as exc:
@@ -536,11 +539,11 @@ def upload_to_opensensemap(cpm, timestamp):
     url = f"https://api.opensensemap.org/boxes/{OPENSENSEMAP_SENSEBOX_ID}/{OPENSENSEMAP_SENSOR_ID}"
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "Project-Theia/2.2",
+        "User-Agent": f"Project-Theia/{VERSION}",
     }
     payload = {
         "value": str(cpm),
-        "createdAt": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "createdAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
     }
     try:
         response = requests.post(url, json=payload, headers=headers, timeout=10)
