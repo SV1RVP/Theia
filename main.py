@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.6"
+VERSION = "2.3.7"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -475,16 +475,20 @@ def upload_to_gmcmap(cpm, usvh, timestamp):
 
 def upload_to_radmon(cpm, timestamp):
     url = (
-        f"http://radmon.org/radmon.php?function=submit"
+        f"https://radmon.org/radmon.php?function=submit"
         f"&user={RADMON_USERNAME}&password={RADMON_PASSWORD}&unit=CPM&value={cpm}"
     )
-    headers = {"User-Agent": "Project-Theia/2.2"}
+    headers = {"User-Agent": f"Project-Theia/{VERSION}"}
     try:
         response = requests.get(url, headers=headers, timeout=10)
+        clean_resp = response.text.replace("<br>", " ").replace("<br/>", " ").replace("<br />", " ").strip()
         if response.status_code == 200 and "OK" in response.text.upper():
-            print(f"[{timestamp}] [Radmon.org] -> Successful upload! Response: {response.text.strip()}")
+            if "COULD NOT CREATE USER FOLDER" in response.text.upper():
+                print(f"[{timestamp}] [Radmon.org] -> Upload accepted with server notice: '{clean_resp}' (Check station setup on radmon.org)")
+            else:
+                print(f"[{timestamp}] [Radmon.org] -> Successful upload! Response: {clean_resp}")
             return True
-        print(f"[{timestamp}] [Radmon.org] -> API Error (HTTP {response.status_code}): {response.text.strip()}")
+        print(f"[{timestamp}] [Radmon.org] -> API Error (HTTP {response.status_code}): {clean_resp}")
         return False
     except Exception as exc:
         print(f"[{timestamp}] [Radmon.org] -> Connection failed: {exc}")
