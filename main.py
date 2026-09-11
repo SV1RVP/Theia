@@ -31,7 +31,7 @@ CONFIG_DIR = os.path.join(BASE_DIR, "config")
 DB_NAME = os.path.join(CONFIG_DIR, "radiation_data.db")
 CSV_NAME = os.path.join(CONFIG_DIR, "radiation_log.csv")
 
-VERSION = "2.3.5"
+VERSION = "2.3.6"
 GITHUB_REPO = "https://github.com/SV1RVP/Theia"
 GITHUB_API_COMMITS = "https://api.github.com/repos/SV1RVP/Theia/commits/main"
 
@@ -691,7 +691,15 @@ def log_endpoint():
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        cloud_targets={
+            "gmcmap": gmcmap_enabled(),
+            "radmon": radmon_enabled(),
+            "safecast": safecast_enabled(),
+            "opensense": opensensemap_enabled(),
+        },
+    )
 
 
 @app.route("/logo/<path:filename>")
@@ -794,6 +802,12 @@ def api_data():
             "today_start": today_start.strftime("%Y-%m-%d 00:00:00"),
             "today_end": today_end.strftime("%Y-%m-%d 23:59:59"),
             "history": history,
+            "cloud_targets": {
+                "gmcmap": gmcmap_enabled(),
+                "radmon": radmon_enabled(),
+                "safecast": safecast_enabled(),
+                "opensense": opensensemap_enabled(),
+            },
         })
     except Exception as exc:
         return jsonify({"status": "error", "message": str(exc)}), 500

@@ -1421,26 +1421,47 @@
         .cloud-badges-row {
             display: flex;
             align-items: center;
-            gap: 0.7rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
         }
 
         .cloud-service-badge {
-            font-size: 0.76rem;
+            font-size: 0.78rem;
             font-weight: 600;
-            padding: 0.35rem 0.85rem;
+            padding: 0.38rem 0.85rem;
             border-radius: 50px;
             background: var(--btn-bg);
             border: 1px solid var(--btn-border);
             display: inline-flex;
             align-items: center;
-            gap: 7px;
+            gap: 8px;
             color: var(--text-secondary);
-            transition: all 0.2s ease;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
         }
 
-        .cloud-service-badge:hover {
+        .cloud-service-badge.is-online {
+            opacity: 1;
+            border-color: rgba(34, 197, 94, 0.35);
+            background: var(--btn-bg);
             color: var(--text-primary);
+        }
+
+        .cloud-service-badge.is-online:hover {
+            border-color: rgba(34, 197, 94, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .cloud-service-badge.is-offline {
+            opacity: 0.42;
+            border-color: var(--btn-border);
+            color: var(--text-muted);
+            filter: grayscale(0.5);
+        }
+
+        .cloud-service-badge.is-offline:hover {
+            opacity: 0.75;
+            filter: grayscale(0.1);
             border-color: var(--card-border-hover);
         }
 
@@ -1448,8 +1469,56 @@
             width: 7px;
             height: 7px;
             border-radius: 50%;
-            background: var(--status-color);
-            box-shadow: 0 0 8px var(--status-color);
+            transition: all 0.25s ease;
+            flex-shrink: 0;
+        }
+
+        .dot-gmcmap {
+            background: #22c55e;
+            box-shadow: 0 0 8px #22c55e;
+        }
+
+        .dot-radmon {
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+        }
+
+        .dot-safecast {
+            background: #fbbf24;
+            box-shadow: 0 0 8px #fbbf24;
+        }
+
+        .dot-opensense {
+            background: #a855f7;
+            box-shadow: 0 0 8px #a855f7;
+        }
+
+        .cloud-service-badge.is-offline .service-active-dot {
+            background: #64748b !important;
+            box-shadow: none !important;
+        }
+
+        .service-status-tag {
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 0.12rem 0.45rem;
+            border-radius: 4px;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            transition: all 0.25s ease;
+            line-height: 1.2;
+        }
+
+        .cloud-service-badge.is-online .service-status-tag {
+            background: rgba(34, 197, 94, 0.14);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.28);
+        }
+
+        .cloud-service-badge.is-offline .service-status-tag {
+            background: rgba(148, 163, 184, 0.1);
+            color: #94a3b8;
+            border: 1px solid rgba(148, 163, 184, 0.18);
         }
 
         /* --- FOOTER --- */
@@ -1869,21 +1938,25 @@
                 <span id="cloud-status-title">Προώθηση σε Παγκόσμια Δίκτυα (Multi-Cloud)</span>
             </div>
             <div class="cloud-badges-row">
-                <span class="cloud-service-badge" id="badge-gmcmap">
-                    <span class="service-active-dot"></span>
+                <span class="cloud-service-badge {{ 'is-online' if cloud_targets and cloud_targets.gmcmap else 'is-offline' }}" id="badge-gmcmap">
+                    <span class="service-active-dot dot-gmcmap"></span>
                     <span>GMCMap.com</span>
+                    <span class="service-status-tag" id="tag-gmcmap">{{ 'ONLINE' if cloud_targets and cloud_targets.gmcmap else 'OFFLINE' }}</span>
                 </span>
-                <span class="cloud-service-badge" id="badge-radmon">
-                    <span class="service-active-dot" style="background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></span>
+                <span class="cloud-service-badge {{ 'is-online' if cloud_targets and cloud_targets.radmon else 'is-offline' }}" id="badge-radmon">
+                    <span class="service-active-dot dot-radmon"></span>
                     <span>Radmon.org</span>
+                    <span class="service-status-tag" id="tag-radmon">{{ 'ONLINE' if cloud_targets and cloud_targets.radmon else 'OFFLINE' }}</span>
                 </span>
-                <span class="cloud-service-badge" id="badge-safecast">
-                    <span class="service-active-dot" style="background: #fbbf24; box-shadow: 0 0 8px #fbbf24;"></span>
+                <span class="cloud-service-badge {{ 'is-online' if cloud_targets and cloud_targets.safecast else 'is-offline' }}" id="badge-safecast">
+                    <span class="service-active-dot dot-safecast"></span>
                     <span>Safecast (CC0)</span>
+                    <span class="service-status-tag" id="tag-safecast">{{ 'ONLINE' if cloud_targets and cloud_targets.safecast else 'OFFLINE' }}</span>
                 </span>
-                <span class="cloud-service-badge" id="badge-opensense">
-                    <span class="service-active-dot" style="background: #a855f7; box-shadow: 0 0 8px #a855f7;"></span>
+                <span class="cloud-service-badge {{ 'is-online' if cloud_targets and cloud_targets.opensense else 'is-offline' }}" id="badge-opensense">
+                    <span class="service-active-dot dot-opensense"></span>
                     <span>OpenSenseMap</span>
+                    <span class="service-status-tag" id="tag-opensense">{{ 'ONLINE' if cloud_targets and cloud_targets.opensense else 'OFFLINE' }}</span>
                 </span>
             </div>
         </section>
@@ -1921,7 +1994,7 @@
                 <div class="version-info-box">
                     <div class="version-row">
                         <span id="lbl-curr-ver">Τρέχουσα Έκδοση:</span>
-                        <span class="version-pill current" id="curr-version-val">v2.3.5</span>
+                        <span class="version-pill current" id="curr-version-val">v2.3.6</span>
                     </div>
                     <div class="version-row">
                         <span id="lbl-latest-commit">Τελευταίο GitHub Commit:</span>
@@ -2615,6 +2688,10 @@
                     }
 
                     renderFilteredChart();
+
+                    if (data.cloud_targets) {
+                        updateCloudTargets(data.cloud_targets);
+                    }
                 }
             } catch (err) {
                 console.error('Fetch error:', err);
@@ -2622,6 +2699,28 @@
                 document.getElementById('status-text').innerText = i18n[currentLang].statusError;
                 document.getElementById('status-text').style.color = '#ef4444';
             }
+        }
+
+        // --- UPDATE CLOUD TARGETS STATUS BADGES ---
+        function updateCloudTargets(targets) {
+            if (!targets) return;
+            const services = ['gmcmap', 'radmon', 'safecast', 'opensense'];
+            services.forEach(key => {
+                const badge = document.getElementById(`badge-${key}`);
+                const tag = document.getElementById(`tag-${key}`);
+                if (badge && tag) {
+                    const isOnline = Boolean(targets[key]);
+                    if (isOnline) {
+                        badge.classList.remove('is-offline');
+                        badge.classList.add('is-online');
+                        tag.innerText = 'ONLINE';
+                    } else {
+                        badge.classList.remove('is-online');
+                        badge.classList.add('is-offline');
+                        tag.innerText = 'OFFLINE';
+                    }
+                }
+            });
         }
 
         // --- SYSTEM UPDATE MODAL & AUTOMATION ---
